@@ -20,3 +20,4 @@ export class LoginPage {
     await expect(this.pageTitle).toHaveText(assertionText);
   }
 }
+export default LoginPage;
