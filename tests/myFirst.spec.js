@@ -3,16 +3,19 @@ const { syncBuiltinESMExports } = require("module");
 
 test.beforeEach(async ({ page }, testInfo) => {
   await page.goto("https://www.saucedemo.com/");
-  
+
   console.log(`Running  ${testInfo.title}`);
 
   // Expect a title "to contain" a substring.
   await expect(page).toHaveTitle(/.*Swag Labs/);
 });
 
-test.afterEach( async ({page}, testInfo) =>{
+test.afterEach(async ({ page }, testInfo) => {
   console.log(`Finished ${testInfo.title} with status ${testInfo.status}`);
-})
+  if (testInfo.expectedStatus != testInfo.status) {
+    console.log(`Did not run as expected , ended up at ${page.url()}`);
+  }
+});
 
 test.describe("Login Five Test Cases", () => {
   test("Test Scenario 1| wrong username, correct password", async ({
@@ -64,49 +67,60 @@ test.describe("Login Five Test Cases", () => {
   });
 });
 
-test.describe("Purchase the lowest price item", () => {
-  test("Test Scenario 1", async ({ page }) => {
-    //await page.pause();
-    await page.locator("[id = user-name]").fill("standard_user");
-    await page.locator("[id = password]").fill("secret_sauce");
-    await page.getByRole("button", { name: "Login" }).click();
-    await expect(page.locator(".title")).toHaveText("Products");
+test.describe("Purchase Item", () => {
+  test("Test Scenario | Purchase the lowest price item", async ({ page }) => {
+    await test.step("Login Step", async () => {
+      //await page.pause();
+      await page.locator("[id = user-name]").fill("standard_user");
+      await page.locator("[id = password]").fill("secret_sauce");
+      await page.getByRole("button", { name: "Login" }).click();
+      await expect(page.locator(".title")).toHaveText("Products");
+    });
 
-    const itemList = await page
-      .locator("data-test=inventory-item-price")
-      .allTextContents();
+    await test.step("Find least item", async () => {
+      const itemList = await page
+        .locator("data-test=inventory-item-price")
+        .allTextContents();
 
-    var min = Number.MAX_VALUE;
-    let arraValue = 0.0;
-    let index = 0;
-    for (let i in itemList) {
-      arraValue = eval(itemList[i].replace("$", ""));
-      if (min > arraValue) {
-        min = arraValue;
-        index = i;
+      var min = Number.MAX_VALUE;
+      let arraValue = 0.0;
+      let index = 0;
+      for (let i in itemList) {
+        arraValue = eval(itemList[i].replace("$", ""));
+        if (min > arraValue) {
+          min = arraValue;
+          index = i;
+        }
       }
-    }
-    console.log(min);
+      console.log(min);
+      const lstItemBtn = await page.locator("button").all();
+      await lstItemBtn[index].click();
+    });
 
-    const lstItemBtn = await page.locator("button").all();
-    await lstItemBtn[index].click();
+    await test.step("Add to Cart", async () => {
+      await page.locator(".shopping_cart_link").click();
+      await page.getByRole("button", { name: "Checkout" }).click();
+    });
 
-    await page.locator(".shopping_cart_link").click();
-    await page.getByRole("button", { name: "Checkout" }).click();
+    await test.step("Checkout with Address", async () => {
+      const addressForm1 = await page.getByRole("textbox").all();
+      await addressForm1[0].fill("john");
+      await addressForm1[1].fill("Doe");
+      await addressForm1[2].fill("8200");
+      await page.locator("id=continue").click();
+      await expect(page.locator(".title")).toHaveText("Checkout: Overview");
+    });
 
-    const addressForm1 = await page.getByRole("textbox").all();
+    await test.step("Verify | Completed the order", async () => {
+      console.log(
+        await page.locator("data-test=payment-info-value").textContent()
+      );
 
-    await addressForm1[0].fill("john");
-    await addressForm1[1].fill("Doe");
-    await addressForm1[2].fill("8200");
-    await page.locator('id=continue').click();
-    await expect(page.locator(".title")).toHaveText("Checkout: Overview");
+      await page.locator("id=finish").click();
 
-    console.log(await page.locator('data-test=payment-info-value').textContent());
-
-    await page.locator('id=finish').click();
-
-    await expect(page.locator('data-test=complete-header')).toHaveText('Thank you for your order!');
-    
+      await expect(page.locator("data-test=complete-header")).toHaveText(
+        "Thank you for your order!"
+      );
+    });
   });
 });
