@@ -1,12 +1,16 @@
 const { test, expect } = require("@playwright/test");
 const { syncBuiltinESMExports } = require("module");
+const { LoginPage } = require("../pages/Login-page");
+
+const url = "https://www.saucedemo.com/";
+
+test.beforeAll(async () => {
+  console.log("Autoamtion Testscirpt has started.");
+});
 
 test.beforeEach(async ({ page }, testInfo) => {
-  await page.goto("https://www.saucedemo.com/");
-
+  await page.goto(url);
   console.log(`Running  ${testInfo.title}`);
-
-  // Expect a title "to contain" a substring.
   await expect(page).toHaveTitle(/.*Swag Labs/);
 });
 
@@ -17,14 +21,18 @@ test.afterEach(async ({ page }, testInfo) => {
   }
 });
 
+test.afterAll(async () => {
+  console.log("The Autoamtion script has completed.");
+});
+
 test.describe("Login Five Test Cases", () => {
   test("Test Scenario 1| wrong username, correct password", async ({
     page,
   }) => {
-    await page.locator("[id = user-name]").fill("standard_use");
-    await page.locator("[id = password]").fill("secret_sauce");
-    await page.getByRole("button", { name: "Login" }).click();
-    await expect(page.locator(".error-message-container")).toHaveText(
+    const loginPage = new LoginPage(page);
+    await loginPage.userName.fill("standard_use");
+    await loginPage.password.fill("secret_sauce");
+    await loginPage.clickOnLoginBtnW(
       "Epic sadface: Username and password do not match any user in this service"
     );
   });
@@ -32,38 +40,33 @@ test.describe("Login Five Test Cases", () => {
   test("Test Scenario 2| correct username, wrong password", async ({
     page,
   }) => {
-    await page.locator("[id = user-name]").fill("standard_user");
-    await page.locator("[id = password]").fill("secretsauce");
-    await page.getByRole("button", { name: "Login" }).click();
-    await expect(page.locator(".error-message-container")).toHaveText(
+    const loginPage = new LoginPage(page);
+    await loginPage.userName.fill("standard_user");
+    await loginPage.password.fill("secretsauce");
+    await loginPage.clickOnLoginBtnW(
       "Epic sadface: Username and password do not match any user in this service"
     );
   });
 
   test("Test Scenario 3| wrong username, wrong password", async ({ page }) => {
-    await page.locator("[id = user-name]").fill("standard_use");
-    await page.locator("[id = password]").fill("secretsauce");
-    await page.getByRole("button", { name: "Login" }).click();
-    await expect(page.locator(".error-message-container")).toHaveText(
+    const loginPage = new LoginPage(page);
+    await loginPage.userName.fill("standard_use");
+    await loginPage.password.fill("secretsauce");
+    await loginPage.clickOnLoginBtnW(
       "Epic sadface: Username and password do not match any user in this service"
     );
   });
 
   test("Test Scenario 4| correct id, password", async ({ page }) => {
-    await page.locator("[id = user-name]").fill("standard_user");
-    await page.locator("[id = password]").fill("secret_sauce");
-    await page.getByRole("button", { name: "Login" }).click();
-    await expect(page.locator(".title")).toHaveText("Products");
-
-    // await new Promise(() => {}); // prevents your script from exiting!
-    // await browser.close();
+    const loginPage = new LoginPage(page);
+    await loginPage.userName.fill("standard_user");
+    await loginPage.password.fill("secret_sauce");
+    await loginPage.clickOnLoginBtnR("Products");
   });
 
   test("Test Scenario 5| empty fields, click submit", async ({ page }) => {
-    await page.getByRole("button", { name: "Login" }).click();
-    await expect(page.locator(".error-message-container")).toHaveText(
-      "Epic sadface: Username is required"
-    );
+    const loginPage = new LoginPage(page);
+    await loginPage.clickOnLoginBtnW("Epic sadface: Username is required");
   });
 });
 
