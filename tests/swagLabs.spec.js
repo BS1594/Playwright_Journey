@@ -1,6 +1,7 @@
 const { test, expect } = require("@playwright/test");
 const { syncBuiltinESMExports } = require("module");
 const { LoginPage } = require("../pages/Login-page");
+const testData = JSON.parse(JSON.stringify(require("../testdata.json")));
 
 const url = "https://www.saucedemo.com/";
 let loginPage;
@@ -62,8 +63,8 @@ test.describe("Login Five Test Cases", () => {
 
   test("Test Scenario 4| correct id, password", async ({ page }) => {
     // const loginPage = new LoginPage(page);
-    await loginPage.userName.fill("standard_user");
-    await loginPage.password.fill("secret_sauce");
+    await loginPage.userName.fill(testData.userName);
+    await loginPage.password.fill(testData.password);
     await loginPage.clickOnLoginBtnR("Products");
   });
 
